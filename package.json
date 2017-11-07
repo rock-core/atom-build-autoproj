@@ -1,7 +1,7 @@
 {
     "name": "build-autoproj",
     "main": "./lib/autoproj-build-provider.js",
-    "version": "0.1.0",
+    "version": "0.0.0",
     "description": "Support to handle Autoproj workspaces in Atom",
     "keywords": [
         "autoproj"
