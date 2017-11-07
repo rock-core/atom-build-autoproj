@@ -6,9 +6,6 @@
     "keywords": [
         "autoproj"
     ],
-    "activationCommands": {
-        "atom-workspace": "build-autoproj:toggle"
-    },
     "repository": "https://github.com/doudou/atom-build-autoproj",
     "license": "MIT",
     "engines": {
