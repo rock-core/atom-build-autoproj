@@ -6,7 +6,7 @@
     "keywords": [
         "autoproj"
     ],
-    "repository": "https://github.com/doudou/atom-build-autoproj",
+    "repository": "https://github.com/rock-core/atom-build-autoproj",
     "license": "MIT",
     "engines": {
         "atom": ">=1.0.0 <2.0.0"
