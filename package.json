@@ -14,7 +14,8 @@
   "dependencies": {
     "atom-package-deps": "^4.0.1",
     "js-yaml": ">= 0",
-    "voucher": ">= 0"
+    "voucher": ">= 0",
+    "xregexp": ">= 0"
   },
   "devDependencies": {
     "eslint": "^3.19.0",
