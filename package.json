@@ -1,0 +1,37 @@
+{
+    "name": "build-autoproj",
+    "main": "./lib/autoproj-build-provider.js",
+    "version": "0.1.0",
+    "description": "Support to handle Autoproj workspaces in Atom",
+    "keywords": [
+        "autoproj"
+    ],
+    "activationCommands": {
+        "atom-workspace": "build-autoproj:toggle"
+    },
+    "repository": "https://github.com/doudou/atom-build-autoproj",
+    "license": "MIT",
+    "engines": {
+        "atom": ">=1.0.0 <2.0.0"
+    },
+    "dependencies": {
+        "atom-package-deps": "^4.0.1",
+        "js-yaml": ">= 0",
+        "voucher": ">= 0"
+    },
+    "devDependencies": {
+        "eslint": "^3.19.0",
+        "eslint-config-google": "^0.7.1"
+    },
+    "package-deps": [
+        "build"
+    ],
+    "providedServices": {
+        "builder": {
+            "description": "Build packages in an Autoproj workspace",
+            "versions": {
+                "2.0.0": "providingFunction"
+            }
+        }
+    }
+}
