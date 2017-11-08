@@ -26,14 +26,16 @@ describe "test matchers", ->
             minitest_reports = fs.readFileSync(path.join(__dirname, 'minitest-errors.txt'), encoding: 'utf8')
             pkg = new autoproj.TestPackage('rubylib', 'Autobuild::Ruby', '/path/to/workspace')
             matches = pkg.functionMatch(minitest_reports)
-            expect(matches.length).toBe(5)
-            expect(matches[0].file).toBe("/home/doudou/dev/atom-workspace-test/rubylib/test/failing_test.rb")
-            expect(matches[0].line).toBe('5')
+            expect(matches.length).toBe(4)
+            expect(matches[0]).toEqual({
+                file: "/home/doudou/dev/atom-workspace-test/rubylib/test/failing_test.rb",
+                line: '5',
+                trace: [{ file: "/usr/lib/ruby/vendor_ruby/minitest/test.rb", line: '108' }],
+                message: " a test that fails#test_0001_has an error:\nRuntimeError: error"
+            })
             expect(matches[1].file).toBe("/home/doudou/dev/atom-workspace-test/rubylib2/test/failing_test.rb")
             expect(matches[1].line).toBe('8')
-            expect(matches[2].file).toBe("/usr/lib/ruby/vendor_ruby/minitest/test.rb")
-            expect(matches[2].line).toBe('108')
-            expect(matches[3].file).toBe("/home/doudou/dev/atom-workspace-test/rubylib/test/failing_test.rb")
-            expect(matches[3].line).toBe('8')
-            expect(matches[4].file).toBe("/home/doudou/dev/atom-workspace-test/rubylib/test/rubylib_test.rb")
-            expect(matches[4].line).toBe('9')
+            expect(matches[2].file).toBe("/home/doudou/dev/atom-workspace-test/rubylib/test/failing_test.rb")
+            expect(matches[2].line).toBe('8')
+            expect(matches[3].file).toBe("/home/doudou/dev/atom-workspace-test/rubylib/test/rubylib_test.rb")
+            expect(matches[3].line).toBe('9')
