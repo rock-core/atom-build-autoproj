@@ -1,7 +1,7 @@
 {
   "name": "build-autoproj",
   "main": "./lib/build-autoproj.js",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Support to handle Autoproj workspaces in Atom",
   "keywords": [
     "autoproj"
@@ -27,10 +27,10 @@
     "build"
   ],
   "providedServices": {
-      "builder": {
-          "versions": {
-              "2.0.0": "provideBuild"
-          }
+    "builder": {
+      "versions": {
+        "2.0.0": "provideBuild"
       }
+    }
   }
 }
