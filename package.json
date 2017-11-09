@@ -26,11 +26,10 @@
     "build"
   ],
   "providedServices": {
-    "builder": {
-      "description": "Build packages in an Autoproj workspace",
-      "versions": {
-        "2.0.0": "consumeBuild"
+      "builder": {
+          "versions": {
+              "2.0.0": "provideBuild"
+          }
       }
-    }
   }
 }
