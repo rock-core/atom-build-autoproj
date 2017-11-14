@@ -36,6 +36,47 @@ describe "CMake packages", ->
             expect(matches[0].type).toBe("Warning")
             expect(matches[0].message).toBe("‘syntax_error’ does not name a type")
 
+    describe "the oroGen output", ->
+        it "matches the Typelib warnings", ->
+            workspaceInfo = {
+                packages: new Map([["orogen_with_warnings", {name: "orogen_with_warnings", type: "Autobuild::Orogen"}]])
+            }
+            error = """
+orogen_with_warnings:orogen: Typelib[WARN]: /path/to/file.hpp:9: ignoring incomplete type /SISLCurve
+            """
+            matches = buildMatcher(workspaceInfo, error)
+            expect(matches).toEqual([{
+                file: "/path/to/file.hpp",
+                line: '9',
+                type: 'Warning',
+                message: "ignoring incomplete type /SISLCurve"
+            }])
+
+        it "matches a mix of Typelib warnings and compilation errors", ->
+            workspaceInfo = {
+                packages: new Map([["orogen", {name: "orogen", type: "Autobuild::Orogen"}]])
+            }
+            error = """
+orogen:orogen: Typelib[WARN]: /path/to/file.hpp:9: ignoring incomplete type /SISLCurve
+orogen:orogen: /path/to/error.hpp:15:10: error: syntax error
+            """
+            matches = buildMatcher(workspaceInfo, error)
+            expect(matches).toEqual([
+                {
+                    file: "/path/to/file.hpp",
+                    line: '9',
+                    type: 'Warning',
+                    message: "ignoring incomplete type /SISLCurve"
+                },
+                {
+                    file: "/path/to/error.hpp",
+                    line: '15',
+                    column: '10'
+                    type: 'Error',
+                    message: "syntax error"
+                }
+            ])
+
     describe "matches a Rake error", ->
         it "matches an error due to an exception", ->
             workspaceInfo = {
