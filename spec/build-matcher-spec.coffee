@@ -19,7 +19,8 @@ describe "CMake packages", ->
             expect(matches[0].file).toBe("/path/to/File.cpp")
             expect(matches[0].line).toBe("21")
             expect(matches[0].column).toBe("2")
-            expect(matches[0].message).toBe("Error: ‘syntax_error’ does not name a type")
+            expect(matches[0].type).toBe("Error")
+            expect(matches[0].message).toBe("‘syntax_error’ does not name a type")
 
     describe "matches a GCC Warning", ->
         it "successfully matches a GCC warning", ->
@@ -32,7 +33,8 @@ describe "CMake packages", ->
             expect(matches[0].file).toBe("/path/to/File.cpp")
             expect(matches[0].line).toBe("21")
             expect(matches[0].column).toBe("2")
-            expect(matches[0].message).toBe("Warning: ‘syntax_error’ does not name a type")
+            expect(matches[0].type).toBe("Warning")
+            expect(matches[0].message).toBe("‘syntax_error’ does not name a type")
 
     describe "matches a Rake error", ->
         it "matches an error due to an exception", ->
