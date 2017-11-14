@@ -10,26 +10,26 @@ path     = require 'path'
 describe "CMake packages", ->
     describe "matches a GCC error", ->
         it "successfully matches a GCC error", ->
-            error = "drivers/orogen/iodrivers_base:build: /home/doudou/dev/rock-ucs/drivers/orogen/iodrivers_base/tasks/Proxy.cpp:21:2: error: ‘syntax_error’ does not name a type"
+            error = "drivers/orogen/iodrivers_base:build: /path/to/File.cpp:21:2: error: ‘syntax_error’ does not name a type"
             workspaceInfo = {
                 packages: new Map([["drivers/orogen/iodrivers_base", {name: "drivers/orogen/iodrivers_base", type: "Autobuild::CMake"}]])
             }
             matches = buildMatcher(workspaceInfo, error)
             expect(matches.length).toBe(1)
-            expect(matches[0].file).toBe("/home/doudou/dev/rock-ucs/drivers/orogen/iodrivers_base/tasks/Proxy.cpp")
+            expect(matches[0].file).toBe("/path/to/File.cpp")
             expect(matches[0].line).toBe("21")
             expect(matches[0].column).toBe("2")
             expect(matches[0].message).toBe("Error: ‘syntax_error’ does not name a type")
 
     describe "matches a GCC Warning", ->
         it "successfully matches a GCC warning", ->
-            error = "drivers/orogen/iodrivers_base:build: /home/doudou/dev/rock-ucs/drivers/orogen/iodrivers_base/tasks/Proxy.cpp:21:2: warning: ‘syntax_error’ does not name a type"
+            error = "drivers/orogen/iodrivers_base:build: /path/to/File.cpp:21:2: warning: ‘syntax_error’ does not name a type"
             workspaceInfo = {
                 packages: new Map([["drivers/orogen/iodrivers_base", {name: "drivers/orogen/iodrivers_base", type: "Autobuild::CMake"}]])
             }
             matches = buildMatcher(workspaceInfo, error)
             expect(matches.length).toBe(1)
-            expect(matches[0].file).toBe("/home/doudou/dev/rock-ucs/drivers/orogen/iodrivers_base/tasks/Proxy.cpp")
+            expect(matches[0].file).toBe("/path/to/File.cpp")
             expect(matches[0].line).toBe("21")
             expect(matches[0].column).toBe("2")
             expect(matches[0].message).toBe("Warning: ‘syntax_error’ does not name a type")
@@ -42,21 +42,27 @@ describe "CMake packages", ->
             error = """
 rubylib_fail_install:post-install: rake aborted!
 rubylib_fail_install:post-install: cannot install
-rubylib_fail_install:post-install: /home/doudou/dev/atom-workspace-test/rubylib_fail_install/Rakefile:10:in `<top (required)>'
-rubylib_fail_install:post-install: /home/doudou/.autoproj/gems/ruby/2.3.0/gems/rake-12.0.0/exe/rake:27:in `<top (required)>'
+rubylib_fail_install:post-install: /path/to/Rakefile:10:in `<top (required)>'
+rubylib_fail_install:post-install: /the/gems/rake-12.0.0/exe/rake:27:in `<top (required)>'
 rubylib_fail_install:post-install: (See full trace by running task with --trace)
             """
             matches = buildMatcher(workspaceInfo, error)
             expect(matches.length).toBe(1)
-            expect(matches[0].file).toBe("/home/doudou/dev/atom-workspace-test/rubylib_fail_install/Rakefile")
+            expect(matches[0].file).toBe("/path/to/Rakefile")
             expect(matches[0].line).toBe("10")
             expect(matches[0].message).toBe("cannot install")
-            expect(matches[0].trace[0].file).toBe("/home/doudou/dev/atom-workspace-test/rubylib_fail_install/Rakefile")
-            expect(matches[0].trace[0].line).toBe("10")
-            expect(matches[0].trace[0].message).toBe("in `<top (required)>'")
-            expect(matches[0].trace[1].file).toBe("/home/doudou/.autoproj/gems/ruby/2.3.0/gems/rake-12.0.0/exe/rake")
-            expect(matches[0].trace[1].line).toBe("27")
-            expect(matches[0].trace[1].message).toBe("in `<top (required)>'")
+            expect(matches[0].trace).toEqual([
+                {
+                    file: "/path/to/Rakefile",
+                    line: '10',
+                    message: "in `<top (required)>'"
+                },
+                {
+                    file: "/the/gems/rake-12.0.0/exe/rake",
+                    line: '27',
+                    message: "in `<top (required)>'"
+                }])
+
 
         it "matches an error due to the default task missing", ->
             workspaceInfo = {
@@ -65,17 +71,19 @@ rubylib_fail_install:post-install: (See full trace by running task with --trace)
             error = """
 rubylib_rake_misses_default_task:post-install: rake aborted!
 rubylib_rake_misses_default_task:post-install: Don't know how to build task 'default' (see --tasks)
-rubylib_rake_misses_default_task:post-install: /home/doudou/.autoproj/gems/ruby/2.3.0/gems/rake-12.0.0/exe/rake:27:in `<top (required)>'
+rubylib_rake_misses_default_task:post-install: /the/gems/rake-12.0.0/exe/rake:27:in `<top (required)>'
 rubylib_rake_misses_default_task:post-install: (See full trace by running task with --trace)
             """
             matches = buildMatcher(workspaceInfo, error)
             expect(matches.length).toBe(1)
-            expect(matches[0].file).toBe("/home/doudou/.autoproj/gems/ruby/2.3.0/gems/rake-12.0.0/exe/rake")
+            expect(matches[0].file).toBe("/the/gems/rake-12.0.0/exe/rake")
             expect(matches[0].line).toBe("27")
             expect(matches[0].message).toBe("Don't know how to build task 'default' (see --tasks)")
-            expect(matches[0].trace[0].file).toBe("/home/doudou/.autoproj/gems/ruby/2.3.0/gems/rake-12.0.0/exe/rake")
-            expect(matches[0].trace[0].line).toBe("27")
-            expect(matches[0].trace[0].message).toBe("in `<top (required)>'")
+            expect(matches[0].trace).toEqual([{
+                file: "/the/gems/rake-12.0.0/exe/rake",
+                line: '27',
+                message: "in `<top (required)>'"
+            }])
 
         it "matches an error due to a syntax error", ->
             workspaceInfo = {
@@ -83,17 +91,17 @@ rubylib_rake_misses_default_task:post-install: (See full trace by running task w
             }
             error = """
 rubylib_rake_syntax_error:post-install: rake aborted!
-rubylib_rake_syntax_error:post-install: SyntaxError: /home/doudou/dev/atom-workspace-test/rubylib_rake_syntax_error/Rakefile:9: premature end of char-class: /
+rubylib_rake_syntax_error:post-install: SyntaxError: /path/to/Rakefile:9: premature end of char-class: /
 rubylib_rake_syntax_error:post-install:
 rubylib_rake_syntax_error:post-install: Rake::TestTask.new(:test) do |t|
 rubylib_rake_syntax_error:post-install:     t.libs << "test"
 rubylib_rake_syntax_error:post-install:     t.libs << "lib"
 rubylib_rake_syntax_error:post-install:     t.test_files = FileList["test/
-rubylib_rake_syntax_error:post-install: /home/doudou/dev/atom-workspace-test/rubylib_rake_syntax_error/Rakefile:9: unterminated regexp meets end of file
-rubylib_rake_syntax_error:post-install: /home/doudou/.autoproj/gems/ruby/2.3.0/gems/rake-12.0.0/exe/rake:27:in `<top (required)>'
+rubylib_rake_syntax_error:post-install: /path/to/Rakefile:9: unterminated regexp meets end of file
+rubylib_rake_syntax_error:post-install: /the/gems/rake-12.0.0/exe/rake:27:in `<top (required)>'
             """
             expectedMessage = """
-SyntaxError: /home/doudou/dev/atom-workspace-test/rubylib_rake_syntax_error/Rakefile:9: premature end of char-class: /
+SyntaxError: /path/to/Rakefile:9: premature end of char-class: /
 
 Rake::TestTask.new(:test) do |t|
     t.libs << "test"
@@ -101,12 +109,18 @@ Rake::TestTask.new(:test) do |t|
     t.test_files = FileList["test/"""
             matches = buildMatcher(workspaceInfo, error)
             expect(matches.length).toBe(1)
-            expect(matches[0].file).toBe("/home/doudou/dev/atom-workspace-test/rubylib_rake_syntax_error/Rakefile")
+            expect(matches[0].file).toBe("/path/to/Rakefile")
             expect(matches[0].line).toBe("9")
             expect(matches[0].message).toBe(expectedMessage)
-            expect(matches[0].trace[0].file).toBe("/home/doudou/dev/atom-workspace-test/rubylib_rake_syntax_error/Rakefile")
-            expect(matches[0].trace[0].line).toBe("9")
-            expect(matches[0].trace[0].message).toBe(" unterminated regexp meets end of file")
-            expect(matches[0].trace[1].file).toBe("/home/doudou/.autoproj/gems/ruby/2.3.0/gems/rake-12.0.0/exe/rake")
-            expect(matches[0].trace[1].line).toBe("27")
-            expect(matches[0].trace[1].message).toBe("in `<top (required)>'")
+            expect(matches[0].trace).toEqual([
+                {
+                    file: "/path/to/Rakefile",
+                    line: "9",
+                    message: " unterminated regexp meets end of file"
+                },
+                {
+                    file: "/the/gems/rake-12.0.0/exe/rake",
+                    line: '27',
+                    message: "in `<top (required)>'"
+                }
+            ])
