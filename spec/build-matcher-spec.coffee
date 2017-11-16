@@ -5,7 +5,7 @@ XRegExp  = require 'xregexp'
 autoproj = require '../lib/autoproj-package'
 fs       = require 'fs'
 path     = require 'path'
-{ buildMatcher } = require '../lib/build-matcher'
+{ autoprojBuildMatcher } = require '../lib/build-matcher'
 
 describe "CMake packages", ->
     describe "matches a GCC error", ->
@@ -14,7 +14,7 @@ describe "CMake packages", ->
             workspaceInfo = {
                 packages: new Map([["drivers/orogen/iodrivers_base", {name: "drivers/orogen/iodrivers_base", type: "Autobuild::CMake"}]])
             }
-            matches = buildMatcher(workspaceInfo, error)
+            matches = autoprojBuildMatcher(workspaceInfo, error)
             expect(matches.length).toBe(1)
             expect(matches[0].file).toBe("/path/to/File.cpp")
             expect(matches[0].line).toBe("21")
@@ -28,7 +28,7 @@ describe "CMake packages", ->
             workspaceInfo = {
                 packages: new Map([["drivers/orogen/iodrivers_base", {name: "drivers/orogen/iodrivers_base", type: "Autobuild::CMake"}]])
             }
-            matches = buildMatcher(workspaceInfo, error)
+            matches = autoprojBuildMatcher(workspaceInfo, error)
             expect(matches.length).toBe(1)
             expect(matches[0].file).toBe("/path/to/File.cpp")
             expect(matches[0].line).toBe("21")
@@ -44,7 +44,7 @@ describe "CMake packages", ->
             error = """
 orogen_with_warnings:orogen: Typelib[WARN]: /path/to/file.hpp:9: ignoring incomplete type /SISLCurve
             """
-            matches = buildMatcher(workspaceInfo, error)
+            matches = autoprojBuildMatcher(workspaceInfo, error)
             expect(matches).toEqual([{
                 file: "/path/to/file.hpp",
                 line: '9',
@@ -60,7 +60,7 @@ orogen_with_warnings:orogen: Typelib[WARN]: /path/to/file.hpp:9: ignoring incomp
 orogen:orogen: Typelib[WARN]: /path/to/file.hpp:9: ignoring incomplete type /SISLCurve
 orogen:orogen: /path/to/error.hpp:15:10: error: syntax error
             """
-            matches = buildMatcher(workspaceInfo, error)
+            matches = autoprojBuildMatcher(workspaceInfo, error)
             expect(matches).toEqual([
                 {
                     file: "/path/to/file.hpp",
@@ -77,6 +77,7 @@ orogen:orogen: /path/to/error.hpp:15:10: error: syntax error
                 }
             ])
 
+describe "Ruby packages", ->
     describe "matches a Rake error", ->
         it "matches an error due to an exception", ->
             workspaceInfo = {
@@ -89,7 +90,7 @@ rubylib_fail_install:post-install: /path/to/Rakefile:10:in `<top (required)>'
 rubylib_fail_install:post-install: /the/gems/rake-12.0.0/exe/rake:27:in `<top (required)>'
 rubylib_fail_install:post-install: (See full trace by running task with --trace)
             """
-            matches = buildMatcher(workspaceInfo, error)
+            matches = autoprojBuildMatcher(workspaceInfo, error)
             expect(matches.length).toBe(1)
             expect(matches[0].file).toBe("/path/to/Rakefile")
             expect(matches[0].line).toBe("10")
@@ -117,7 +118,7 @@ rubylib_rake_misses_default_task:post-install: Don't know how to build task 'def
 rubylib_rake_misses_default_task:post-install: /the/gems/rake-12.0.0/exe/rake:27:in `<top (required)>'
 rubylib_rake_misses_default_task:post-install: (See full trace by running task with --trace)
             """
-            matches = buildMatcher(workspaceInfo, error)
+            matches = autoprojBuildMatcher(workspaceInfo, error)
             expect(matches.length).toBe(1)
             expect(matches[0].file).toBe("/the/gems/rake-12.0.0/exe/rake")
             expect(matches[0].line).toBe("27")
@@ -150,7 +151,7 @@ Rake::TestTask.new(:test) do |t|
     t.libs << "test"
     t.libs << "lib"
     t.test_files = FileList["test/"""
-            matches = buildMatcher(workspaceInfo, error)
+            matches = autoprojBuildMatcher(workspaceInfo, error)
             expect(matches.length).toBe(1)
             expect(matches[0].file).toBe("/path/to/Rakefile")
             expect(matches[0].line).toBe("9")
@@ -167,3 +168,27 @@ Rake::TestTask.new(:test) do |t|
                     message: "in `<top (required)>'"
                 }
             ])
+
+    describe "tests", ->
+        it "successfully parses minitest-reported errors and failure", ->
+            workspaceInfo = {
+                packages: new Map([
+                    ["rubylib1", {name: "rubylib1", type: "Autobuild::Ruby"}],
+                    ["rubylib2", {name: "rubylib2", type: "Autobuild::Ruby"}]
+                ])
+            }
+            minitest_reports = fs.readFileSync(path.join(__dirname, 'minitest-errors.txt'), encoding: 'utf8')
+            matches = autoprojBuildMatcher(workspaceInfo, minitest_reports)
+            expect(matches.length).toBe(4)
+            expect(matches[0].file).toBe("/home/rubylib/test/failing_test.rb")
+            expect(matches[0].line).toBe('5')
+            expect(matches[0].message).toBe("a test that fails#test_0001_has an error:\nRuntimeError: error")
+            expect(matches[0].trace).toEqual(
+                [{ file: "/root/minitest/test.rb", line: '108' }]
+            )
+            expect(matches[1].file).toBe("/home/rubylib/test/failing_test.rb")
+            expect(matches[1].line).toBe('8')
+            expect(matches[2].file).toBe("/home/rubylib/test/rubylib_test.rb")
+            expect(matches[2].line).toBe('9')
+            expect(matches[3].file).toBe("/home/rubylib2/test/failing_test.rb")
+            expect(matches[3].line).toBe('8')
