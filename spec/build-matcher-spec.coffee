@@ -36,7 +36,19 @@ describe "CMake packages", ->
             expect(matches[0].type).toBe("Warning")
             expect(matches[0].message).toBe("‘syntax_error’ does not name a type")
 
-    describe "the oroGen output", ->
+describe "oroGen packages", ->
+    describe "generation", ->
+        it "matches an exception thrown during code generation", ->
+            workspaceInfo = {
+                packages: new Map([["oropkg", {name: "oropkg", type: "Autobuild::Orogen", srcdir: '/path/to/pkg'}]])
+            }
+            error = "oropkg:orogen: iodrivers_base.orogen:10:: in `block (2 levels) in eval_dsl_file_content' (OroGen::ConfigError)"
+            matches = autoprojBuildMatcher(workspaceInfo, error)
+            expect(matches.length).toBe(1)
+            expect(matches[0].file).toBe("/path/to/pkg/iodrivers_base.orogen")
+            expect(matches[0].line).toBe("10")
+            expect(matches[0].message).toBe("in `block (2 levels) in eval_dsl_file_content' (OroGen::ConfigError)")
+
         it "matches the Typelib warnings", ->
             workspaceInfo = {
                 packages: new Map([["orogen_with_warnings", {name: "orogen_with_warnings", type: "Autobuild::Orogen"}]])
@@ -76,6 +88,7 @@ orogen:orogen: /path/to/error.hpp:15:10: error: syntax error
                     message: "syntax error"
                 }
             ])
+
 
 describe "Ruby packages", ->
     describe "matches a Rake error", ->
