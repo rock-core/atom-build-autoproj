@@ -160,7 +160,7 @@ Rake::TestTask.new(:test) do |t|
                 {
                     file: "/path/to/Rakefile",
                     line: "9",
-                    message: " unterminated regexp meets end of file"
+                    message: "unterminated regexp meets end of file"
                 },
                 {
                     file: "/the/gems/rake-12.0.0/exe/rake",
