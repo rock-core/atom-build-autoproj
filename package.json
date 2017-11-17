@@ -33,5 +33,12 @@
         "2.0.0": "provideBuild"
       }
     }
+  },
+  "consumedServices": {
+    "busy-signal": {
+      "versions": {
+        "^1.0.0": "consumeBusySignal"
+      }
+    }
   }
 }

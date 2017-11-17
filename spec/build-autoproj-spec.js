@@ -182,6 +182,52 @@ describe("the workspace commands", function() {
                     toHaveBeenCalledWith(`${workspaceRoot}/.autoproj/bin/autoproj`, ['envsh'], { cwd: workspaceRoot, stdio: 'ignore' })
             })
         })
+
+        describe("busy provider support", function () {
+            let busyProvider;
+            let eventEmitter;
+
+            beforeEach(function () {
+                activatePackage();
+                busyProvider = jasmine.createSpyObj('the busy provider', ['add', 'remove']);
+                eventEmitter = new EventEmitter();
+                spyOn(child_process, 'spawn').andReturn(eventEmitter)
+                runs(() => {
+                    BuildAutoproj.busyProvider = busyProvider
+                })
+            })
+
+            afterEach(function () {
+                if (BuildAutoproj) {
+                    BuildAutoproj.busyProvider = undefined
+                }
+            })
+
+            it("sets up a busy signal on spawn if provided", function() {
+                runs(() => {
+                    BuildAutoproj.updateWorkspaceInfo(workspaceRoot);
+                    expect(busyProvider.add).toHaveBeenCalledWith(`Autoproj: Update Workspace Info of ${workspaceRoot}`);
+                    expect(busyProvider.remove).not.toHaveBeenCalled();
+                })
+            })
+
+            it("removes the busy signal with success if the subprocess finished successfully", function() {
+                runs(() => {
+                    BuildAutoproj.updateWorkspaceInfo(workspaceRoot);
+                    eventEmitter.emit('close', 0);
+                    expect(busyProvider.remove).toHaveBeenCalledWith(`Autoproj: Update Workspace Info of ${workspaceRoot}`, true)
+                })
+            })
+
+            it("removes the busy signal with failure if the subprocess finished successfully", function() {
+                runs(() => {
+                    BuildAutoproj.updateWorkspaceInfo(workspaceRoot);
+                    eventEmitter.emit('close', 1);
+                    expect(busyProvider.remove).toHaveBeenCalledWith(`Autoproj: Update Workspace Info of ${workspaceRoot}`, false)
+                })
+            })
+        })
+        
         it("notifies a build error", function() {
             spyOn(atom.notifications, 'addError')
             activatePackage();
