@@ -182,5 +182,16 @@ describe("the workspace commands", function() {
                     toHaveBeenCalledWith(`${workspaceRoot}/.autoproj/bin/autoproj`, ['envsh'], { cwd: workspaceRoot, stdio: 'ignore' })
             })
         })
+        it("notifies a build error", function() {
+            spyOn(atom.notifications, 'addError')
+            activatePackage();
+            let eventEmitter = new EventEmitter();
+            spyOn(child_process, 'spawn').andReturn(eventEmitter)
+            runs(() => {
+                BuildAutoproj.updateWorkspaceInfo(workspaceRoot)
+                eventEmitter.emit('close', 1)
+                expect(atom.notifications.addError).toHaveBeenCalledWith(`Autoproj: Failed to update workspace information for ${workspaceRoot}`)
+            })
+        })
     })
 })
