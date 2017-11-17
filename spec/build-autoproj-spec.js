@@ -172,7 +172,6 @@ describe("the workspace commands", function() {
 
     describe("updateWorkspaceInfo", function() {
         it("executes autoproj envsh within the workspace root", function() {
-            mkdir(Path.join(workspaceRoot, '.autoproj'))
             activatePackage();
             let eventEmitter = new EventEmitter();
             spyOn(child_process, 'spawn').andReturn(eventEmitter)
@@ -180,6 +179,22 @@ describe("the workspace commands", function() {
                 BuildAutoproj.updateWorkspaceInfo(workspaceRoot)
                 expect(child_process.spawn).
                     toHaveBeenCalledWith(`${workspaceRoot}/.autoproj/bin/autoproj`, ['envsh'], { cwd: workspaceRoot, stdio: 'ignore' })
+            })
+        })
+
+        it("does not execute two envsh concurrently", function() {
+            activatePackage();
+            let eventEmitter = new EventEmitter();
+            spyOn(child_process, 'spawn').andReturn(eventEmitter)
+            spyOn(atom.notifications, 'addError')
+            runs(() => {
+                BuildAutoproj.updateWorkspaceInfo(workspaceRoot)
+                BuildAutoproj.updateWorkspaceInfo(workspaceRoot)
+                expect(atom.notifications.addError).toHaveBeenCalledWith('Autoproj: already updating workspace information')
+                atom.notifications.addError.reset()
+                eventEmitter.emit('close', 0)
+                BuildAutoproj.updateWorkspaceInfo(workspaceRoot)
+                expect(atom.notifications.addError).not.toHaveBeenCalled()
             })
         })
 
@@ -227,7 +242,7 @@ describe("the workspace commands", function() {
                 })
             })
         })
-        
+
         it("notifies a build error", function() {
             spyOn(atom.notifications, 'addError')
             activatePackage();
