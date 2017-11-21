@@ -49,6 +49,18 @@ describe "oroGen packages", ->
             expect(matches[0].line).toBe("10")
             expect(matches[0].message).toBe("in `block (2 levels) in eval_dsl_file_content' (OroGen::ConfigError)")
 
+        it "matches the missing task library error", ->
+            workspaceInfo = {
+                packages: new Map([["oropkg", {name: "oropkg", type: "Autobuild::Orogen", srcdir: '/path/to/pkg'}]])
+            }
+            error = "oropkg:orogen: oropkg.orogen:23: cannot find typekit or file gps_base"
+            matches = autoprojBuildMatcher(workspaceInfo, error)
+            expect(matches.length).toBe(1)
+            expect(matches[0].file).toBe("/path/to/pkg/oropkg.orogen")
+            expect(matches[0].line).toBe("23")
+            expect(matches[0].message).toBe("cannot find typekit or file gps_base")
+
+
         it "matches the Typelib warnings", ->
             workspaceInfo = {
                 packages: new Map([["orogen_with_warnings", {name: "orogen_with_warnings", type: "Autobuild::Orogen"}]])
